@@ -1,7 +1,7 @@
 const mongoose = require("../index");
 
 const SchedulingSchema = new mongoose.Schema({
-  data: {
+  date: {
     type: Date,
     required: true,
   },
@@ -10,7 +10,7 @@ const SchedulingSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  local: {
+  place: {
     type: String,
     required: true,
     lowercase: true,
