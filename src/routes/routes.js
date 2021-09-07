@@ -1,15 +1,12 @@
-const { register } = require("../controllers/controllers");
+const { register, login, scheduling } = require("../controllers/controllers");
+const authMiddleware = require("../middlewares/check-auth");
 
 const router = require("express").Router();
 
 router
-  .post("/login", (req, res) => {
-    return res.status(200).json({ status: 200, msg: "success" });
-  })
+  .post("/login", login)
   .post("/register", register)
-  .post("/workstation", (req, res) => {
-    return res.status(201).json({ status: 201, msg: "success" });
-  })
+  .post("/scheduling", authMiddleware, scheduling)
   .get("/resume", (req, res) => {
     return res.status(200).json({ status: 201, msg: "success" });
   });
