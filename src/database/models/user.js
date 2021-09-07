@@ -17,12 +17,6 @@ const UserSchema = new mongoose.Schema({
     required: true,
     select: false,
   },
-  Scheduling: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Scheduling",
-    },
-  ],
   createdAt: {
     type: Date,
     default: Date.now,
