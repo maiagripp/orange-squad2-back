@@ -10,7 +10,7 @@ BackEnd do Hackaton do Grupo FCamara.
 - [x] Login
 - [x] Register
 - [x] Middleware para verificar o token de login
-- [ ] Controller para o agendamento
+- [x] Controller para o agendamento
 - [ ] Controller para as imagens
 - [ ] Adicionar ao model de usuario campo de imagen
 - [ ] Model para lembretes
