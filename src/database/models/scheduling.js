@@ -6,16 +6,15 @@ const SchedulingSchema = new mongoose.Schema({
     required: true,
   },
   chair: {
-    type: Number,
-    unique: true,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Chair",
   },
   place: {
     type: String,
     required: true,
     lowercase: true,
   },
-  assignedTo: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
