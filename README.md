@@ -14,6 +14,6 @@ BackEnd do Hackaton do Grupo FCamara.
 - [ ] Controller para as imagens
 - [ ] Adicionar ao model de usuario campo de imagen
 - [ ] Model para lembretes
-- [ ] Model para cadeiras
+- [x] Model para cadeiras
 - [ ] Controllers para email de confirmação de cadastro
-- [ ] Controllers para email de troca de senha
+- [x] Controllers para email de recuperação de senha
