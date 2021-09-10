@@ -1,8 +1,14 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
+const crypto = require("crypto");
+const mailer = require("../modules/mailer");
 const User = require("../database/models/user");
 const Schedule = require("../database/models/scheduling");
+require("dotenv").config();
+
+async function passwordEncrypt(password) {
+  return await bcrypt.hash(password, 10);
+}
 
 module.exports = {
   async register(req, res) {
@@ -11,7 +17,7 @@ module.exports = {
       if (await User.findOne({ email }))
         return res.status(400).send({ error: "User already exists" });
 
-      const hash = await bcrypt.hash(password, 10);
+      const hash = await passwordEncrypt(password);
 
       const user = await User.create({
         name: name,
@@ -27,7 +33,7 @@ module.exports = {
       res.status(400).send({ error: "Registration failed" });
     }
   },
-  async login(req, res) {
+  async authenticate(req, res) {
     try {
       const { email, password } = req.body;
 
@@ -55,7 +61,7 @@ module.exports = {
       const { scheduling } = req.body;
       const user = await User.findById(req.userId);
 
-      if (!user) return res.status(404).send({ error: "User doesn't exists" });
+      if (!user) return res.status(404).send({ error: "User not found" });
 
       await Promise.all(
         scheduling.map(async (sched) => {
@@ -71,6 +77,76 @@ module.exports = {
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Scheduling failed" });
+    }
+  },
+  async passRecovery(req, res) {
+    try {
+      const { email } = req.body;
+
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      const token = crypto.randomBytes(20).toString("hex");
+
+      const now = new Date();
+      now.setHours(now.getHours() + 1);
+
+      await User.findByIdAndUpdate(user.id, {
+        $set: {
+          passwordResetToken: token,
+          passwordResetExpires: now,
+        },
+      });
+
+      mailer.sendMail(
+        {
+          to: email,
+          from: process.env.EMAIL,
+          template: "auth/forgot_password",
+          context: { token },
+        },
+        (err) => {
+          if (err)
+            return res
+              .status(400)
+              .send({ error: "Could not sent recovery email" });
+
+          return res.status(200).send();
+        }
+      );
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ error: "Error on forgot password, try again" });
+    }
+  },
+  async passReset(req, res) {
+    try {
+      const { email, token, password } = req.body;
+
+      const user = await User.findOne({ email }).select(
+        "+passwordResetToken passwordResetExpires"
+      );
+
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      if (token !== user.passwordResetToken)
+        return res.status(400).send({ error: "Token invalid" });
+
+      const now = new Date();
+
+      if (now > user.passwordResetExpires)
+        return res
+          .status(400)
+          .send({ error: "Token expired, generate a new one" });
+
+      user.password = await passwordEncrypt(password);
+
+      await user.save();
+
+      res.send();
+    } catch (err) {
+      console.log(err);
+      res.status(400).send({ error: "Cannot reset password, try again" });
     }
   },
   async users(req, res) {
