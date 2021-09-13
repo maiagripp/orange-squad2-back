@@ -22,6 +22,12 @@ const UserSchema = new mongoose.Schema({
       ref: "Scheduling",
     },
   ],
+  reminder: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: "Reminder",
+    },
+  ],
   passwordResetToken: {
     type: String,
     select: false,

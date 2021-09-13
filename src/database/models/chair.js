@@ -6,9 +6,14 @@ const ChairSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  assignedTo: {
+  scheduling: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Scheduling",
+    required: true,
+  },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
     required: true,
   },
   createdAt: {
