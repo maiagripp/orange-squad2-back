@@ -4,10 +4,17 @@ const crypto = require("crypto");
 const mailer = require("../modules/mailer");
 const User = require("../database/models/user");
 const Schedule = require("../database/models/scheduling");
+const Reminder = require("../database/models/reminder");
 require("dotenv").config();
 
 async function passwordEncrypt(password) {
   return await bcrypt.hash(password, 10);
+}
+
+function generateToken(params = {}) {
+  return jwt.sign(params, process.env.SECRET, {
+    expiresIn: "1d",
+  });
 }
 
 module.exports = {
@@ -27,7 +34,10 @@ module.exports = {
 
       user.password = undefined;
 
-      return res.status(201).send(user);
+      return res.status(201).send({
+        user,
+        token: generateToken({ id: user.id }),
+      });
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Registration failed" });
@@ -38,7 +48,7 @@ module.exports = {
       const { email, password } = req.body;
 
       const user = await User.findOne({ email }).select("+password");
-      console.log(user);
+
       if (!user) return res.status(404).send({ error: "User not found" });
 
       if (!(await bcrypt.compare(password, user.password)))
@@ -46,14 +56,66 @@ module.exports = {
 
       user.password = undefined;
 
-      const token = jwt.sign({ id: user.id }, process.env.SECRET, {
-        expiresIn: "1d",
+      res.status(200).send({
+        user,
+        token: generateToken({ id: user.id }),
       });
-
-      res.status(200).send({ user, token });
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Login failed" });
+    }
+  },
+  async users(req, res) {
+    try {
+      const users = await User.find().populate("scheduling");
+      return res.status(200).send({ users });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ error: "Internal error" });
+    }
+  },
+  async user(req, res) {
+    try {
+      const user = await User.findById(req.params.userId).populate(
+        "scheduling"
+      );
+      return res.status(200).send({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ error: "Internal error" });
+    }
+  },
+  async userUpdate(req, res) {
+    try {
+      const { name, email } = req.body;
+      id = req.params.userId;
+      if (!(await User.findOne(id)))
+        return res.status(400).send({ error: "User not found" });
+
+      const user = await User.findByIdAndUpdate(
+        id,
+        {
+          name: name,
+          email: email,
+        },
+        { new: true }
+      );
+
+      user.password = undefined;
+
+      return res.status(201).send(user);
+    } catch (err) {
+      console.log(err);
+      res.status(400).send({ error: "Registration failed" });
+    }
+  },
+  async userDelete(req, res) {
+    try {
+      await User.findByIdAndRemove(req.params.userId);
+      return res.status(200).send();
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ error: "Internal error" });
     }
   },
   async scheduling(req, res) {
@@ -78,6 +140,31 @@ module.exports = {
       console.log(err);
       res.status(400).send({ error: "Scheduling failed" });
     }
+  },
+  async schedulingUpdate(req, res) {
+    try {
+    } catch (err) {}
+  },
+  async schedulingDelete(req, res) {
+    try {
+    } catch (err) {}
+  },
+  async reminder(req, res) {
+    try {
+      const reminder = await Reminder.create({ ...req.body, user: req.userId });
+      return res.send({ reminder });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send({ error: "Error creating new reminder" });
+    }
+  },
+  async reminderUpdate(req, res) {
+    try {
+    } catch (err) {}
+  },
+  async reminderDelete(req, res) {
+    try {
+    } catch (err) {}
   },
   async passRecovery(req, res) {
     try {
@@ -116,7 +203,7 @@ module.exports = {
       );
     } catch (err) {
       console.log(err);
-      res.status(500).send({ error: "Error on forgot password, try again" });
+      res.status(400).send({ error: "Error on forgot password, try again" });
     }
   },
   async passReset(req, res) {
@@ -147,15 +234,6 @@ module.exports = {
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Cannot reset password, try again" });
-    }
-  },
-  async users(req, res) {
-    try {
-      const users = await User.find().populate("scheduling");
-      return res.status(200).send({ users });
-    } catch (error) {
-      console.log(err);
-      res.status(500).send({ error: "Internal error" });
     }
   },
 };
