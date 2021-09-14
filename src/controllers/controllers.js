@@ -22,13 +22,14 @@ function generateToken(params = {}) {
 module.exports = {
   async register(req, res) {
     try {
-      const { name, email, password } = req.body;
+      const { name, email, password, file } = req.body;
+
       if (await User.findOne({ email }))
         return res.status(400).send({ error: "User already exists" });
 
       const hash = await passwordEncrypt(password);
 
-      const imageUrl = await uploadImage(myFile);
+      const imageUrl = await uploadImage(file);
 
       await Promise.all([hash, imageUrl]);
 
@@ -74,7 +75,7 @@ module.exports = {
   },
   async users(req, res) {
     try {
-      const users = await User.find().populate("scheduling");
+      const users = await User.find().populate(["reminder", "scheduling"]);
       return res.status(200).send({ users });
     } catch (err) {
       console.log(err);
@@ -83,9 +84,10 @@ module.exports = {
   },
   async user(req, res) {
     try {
-      const user = await User.findById(req.params.userId).populate(
-        "scheduling"
-      );
+      const user = await User.findById(req.params.userId).populate([
+        "scheduling",
+        "reminder",
+      ]);
       return res.status(200).send({ user });
     } catch (err) {
       console.log(err);
@@ -352,6 +354,16 @@ module.exports = {
       } catch (err) {
         return res.status(500).json({ error: err });
       }
+    }
+  },
+  async chairs(req, res) {
+    try {
+      const schedule = await Schedule.find({}, "chair").select("-_id").exec();
+      console.log(schedule);
+      return res.status(200).send({ schedule });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({ error: "Internal error" });
     }
   },
 };
