@@ -11,11 +11,6 @@ const ChairSchema = new mongoose.Schema({
     ref: "Scheduling",
     required: true,
   },
-  assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
   createdAt: {
     type: Date,
     default: Date.now,
