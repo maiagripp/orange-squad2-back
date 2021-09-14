@@ -5,6 +5,8 @@ const mailer = require("../modules/mailer");
 const User = require("../database/models/user");
 const Schedule = require("../database/models/scheduling");
 const Reminder = require("../database/models/reminder");
+const uploadImage = require("../modules/uploadImage");
+const deleteFile = require("../modules/deleteImage");
 require("dotenv").config();
 
 async function passwordEncrypt(password) {
@@ -26,10 +28,15 @@ module.exports = {
 
       const hash = await passwordEncrypt(password);
 
+      const imageUrl = await uploadImage(myFile);
+
+      await Promise.all([hash, imageUrl]);
+
       const user = await User.create({
         name: name,
         email: email,
         password: hash,
+        image: imageUrl,
       });
 
       user.password = undefined;
@@ -111,6 +118,10 @@ module.exports = {
   },
   async userDelete(req, res) {
     try {
+      const user = await User.findById(req.params.userId);
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      await deleteFile(user.image);
       await User.findByIdAndRemove(req.params.userId);
       return res.status(200).send();
     } catch (err) {
@@ -314,6 +325,33 @@ module.exports = {
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Cannot reset password, try again" });
+    }
+  },
+  async updateImg(req, res) {
+    if (!req.file) {
+      return res.status(400).json({ message: "The file is invalid." });
+    } else {
+      try {
+        const user = await User.findById(req.userId);
+        if (!user) return res.status(404).send({ error: "User not found" });
+
+        const myFile = req.file;
+        const imageUrl = await uploadImage(myFile);
+        const deleteUrl = await deleteFile(user.image);
+
+        await Promise.all([imageUrl, deleteUrl]);
+
+        await User.findByIdAndUpdate(
+          req.userId,
+          {
+            image: imageUrl,
+          },
+          { new: true }
+        );
+        return res.status(200).json({ user });
+      } catch (err) {
+        return res.status(500).json({ error: err });
+      }
     }
   },
 };
