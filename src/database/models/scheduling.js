@@ -6,8 +6,8 @@ const SchedulingSchema = new mongoose.Schema({
     required: true,
   },
   chair: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Chair",
+    type: Number,
+    unique: true,
     required: true,
   },
   place: {
