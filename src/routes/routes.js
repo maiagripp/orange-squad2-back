@@ -14,6 +14,7 @@ const {
   passRecovery,
   passReset,
   updateImg,
+  chairs,
 } = require("../controllers/controllers");
 
 const authMiddleware = require("../middlewares/check-auth");
@@ -22,7 +23,7 @@ const imgMiddleware = require("../middlewares/check-img");
 const router = require("express").Router();
 
 router
-  .post("/register", register)
+  .post("/register", imgMiddleware.single("userImage"), register)
   .post("/authenticate", authenticate)
   .get("/users", users)
   .get("/user/:userId", user)
@@ -41,6 +42,7 @@ router
     authMiddleware,
     imgMiddleware.single("userImage"),
     updateImg
-  );
+  )
+  .get("/chairs", authMiddleware, chairs);
 
 module.exports = router;
