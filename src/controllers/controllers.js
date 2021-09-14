@@ -143,16 +143,63 @@ module.exports = {
   },
   async schedulingUpdate(req, res) {
     try {
-    } catch (err) {}
+      const { scheduling } = req.body;
+      const user = await User.findById(req.userId);
+
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      await Promise.all(
+        scheduling.map(async (sched) => {
+          const schedule = await Schedule.findByIdAndUpdate(
+            req.params.schedulingId,
+            {
+              sched,
+            }
+          );
+          user.scheduling.push(schedule);
+        })
+      );
+      await user.save();
+      return res.status(200).send({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send({ error: "Update scheduling failed" });
+    }
   },
   async schedulingDelete(req, res) {
     try {
-    } catch (err) {}
+      const user = await User.findById(req.userId);
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      await Schedule.findByIdAndRemove(req.params.schedulingId);
+
+      const empty = [];
+      user.scheduling.push(empty);
+      await user.save();
+      return res.status(200).send({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send({ error: "Delete scheduling failed" });
+    }
   },
   async reminder(req, res) {
     try {
-      const reminder = await Reminder.create({ ...req.body, user: req.userId });
-      return res.send({ reminder });
+      const { reminder } = req.body;
+      const user = await User.findById(req.userId);
+
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      await Promise.all(
+        reminder.map(async (rem) => {
+          const reminder = new Reminder({ ...rem, user: user._id });
+
+          await reminder.save();
+
+          user.reminder.push(reminder);
+        })
+      );
+      await user.save();
+      return res.status(200).send({ user });
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Error creating new reminder" });
@@ -160,11 +207,44 @@ module.exports = {
   },
   async reminderUpdate(req, res) {
     try {
-    } catch (err) {}
+      const { reminder } = req.body;
+      const user = await User.findById(req.userId);
+
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      await Promise.all(
+        reminder.map(async (rem) => {
+          const reminder = await Reminder.findByIdAndUpdate(
+            req.params.reminderId,
+            {
+              rem,
+            }
+          );
+          user.reminder.push(reminder);
+        })
+      );
+      await user.save();
+      return res.status(200).send({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send({ error: "Update reminder failed" });
+    }
   },
   async reminderDelete(req, res) {
     try {
-    } catch (err) {}
+      const user = await User.findById(req.userId);
+      if (!user) return res.status(404).send({ error: "User not found" });
+
+      await Reminder.findByIdAndRemove(req.params.reminderId);
+
+      const empty = [];
+      user.reminder.push(empty);
+      await user.save();
+      return res.status(200).send({ user });
+    } catch (err) {
+      console.log(err);
+      res.status(400).send({ error: "Delete reminder failed" });
+    }
   },
   async passRecovery(req, res) {
     try {
