@@ -13,8 +13,11 @@ const {
   reminderDelete,
   passRecovery,
   passReset,
+  updateImg,
 } = require("../controllers/controllers");
+
 const authMiddleware = require("../middlewares/check-auth");
+const imgMiddleware = require("../middlewares/check-img");
 
 const router = require("express").Router();
 
@@ -32,6 +35,12 @@ router
   .patch("/reminder_update/:reminderId", authMiddleware, reminderUpdate)
   .delete("/reminder_delete/:reminderId", authMiddleware, reminderDelete)
   .post("/forgot_password", passRecovery)
-  .post("/reset_password", passReset);
+  .post("/reset_password", passReset)
+  .post(
+    "/updateImage",
+    authMiddleware,
+    imgMiddleware.single("userImage"),
+    updateImg
+  );
 
 module.exports = router;
