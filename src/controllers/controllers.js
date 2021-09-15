@@ -22,7 +22,7 @@ function generateToken(params = {}) {
 module.exports = {
   async register(req, res) {
     try {
-      const { name, email, password, file } = req.body;
+      const { name, squad, email, phone, adress, password, file } = req.body;
 
       if (await User.findOne({ email }))
         return res.status(400).send({ error: "User already exists" });
@@ -35,7 +35,10 @@ module.exports = {
 
       const user = await User.create({
         name: name,
+        squad: squad,
         email: email,
+        phone: phone,
+        adress: adress,
         password: hash,
         image: imageUrl,
       });
