@@ -99,7 +99,7 @@ module.exports = {
   },
   async userUpdate(req, res) {
     try {
-      const { name, email } = req.body;
+      const { name, squad, email, phone, adress } = req.body;
       id = req.params.userId;
       if (!(await User.findOne(id)))
         return res.status(400).send({ error: "User not found" });
@@ -108,7 +108,10 @@ module.exports = {
         id,
         {
           name: name,
+          squad: squad,
           email: email,
+          phone: phone,
+          adress: adress,
         },
         { new: true }
       );
