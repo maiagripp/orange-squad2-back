@@ -125,10 +125,10 @@ module.exports = {
 
       user.password = undefined;
 
-      return res.status(201).send(user);
+      return res.status(200).send(user);
     } catch (err) {
       console.log(err);
-      res.status(400).send({ error: "Registration failed" });
+      res.status(400).send({ error: "Updated failed" });
     }
   },
   async userDelete(req, res) {
@@ -146,7 +146,7 @@ module.exports = {
   },
   async scheduling(req, res) {
     try {
-      const { scheduling } = req.body;
+      const scheduling = req.body;
       const user = await User.findById(req.userId);
 
       if (!user) return res.status(404).send({ error: "User not found" });
@@ -169,24 +169,29 @@ module.exports = {
   },
   async schedulingUpdate(req, res) {
     try {
-      const { scheduling } = req.body;
+      const { date, chair, place } = req.body;
       const user = await User.findById(req.userId);
 
       if (!user) return res.status(404).send({ error: "User not found" });
 
-      await Promise.all(
-        scheduling.map(async (sched) => {
-          const schedule = await Schedule.findByIdAndUpdate(
-            req.params.schedulingId,
-            {
-              sched,
-            }
-          );
-          user.scheduling.push(schedule);
-        })
+      const id = req.params.schedulingId;
+      const schedule = await Schedule.findById(id);
+      if (!schedule)
+        return res.status(404).send({ error: "Schedule not found" });
+
+      const scheduleUpdate = await Schedule.findByIdAndUpdate(
+        id,
+        {
+          $set: {
+            date: date,
+            chair: chair,
+            place: place,
+          },
+        },
+        { new: true }
       );
-      await user.save();
-      return res.status(200).send({ user });
+
+      return res.status(200).send({ scheduleUpdate });
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Update scheduling failed" });
@@ -197,12 +202,18 @@ module.exports = {
       const user = await User.findById(req.userId);
       if (!user) return res.status(404).send({ error: "User not found" });
 
-      await Schedule.findByIdAndRemove(req.params.schedulingId);
+      const id = req.params.schedulingId;
+      const schedule = await Schedule.findById(id);
+      if (!schedule)
+        return res.status(404).send({ error: "Schedule not found" });
 
-      const empty = [];
-      user.scheduling.push(empty);
+      await Schedule.findByIdAndRemove(id);
+
+      user.scheduling = user.scheduling.map((element) => {
+        if (element == id) element = null;
+      });
       await user.save();
-      return res.status(200).send({ user });
+      return res.status(200).send();
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Delete scheduling failed" });
@@ -210,7 +221,7 @@ module.exports = {
   },
   async reminder(req, res) {
     try {
-      const { reminder } = req.body;
+      const reminder = req.body;
       const user = await User.findById(req.userId);
 
       if (!user) return res.status(404).send({ error: "User not found" });
@@ -228,29 +239,30 @@ module.exports = {
       return res.status(200).send({ user });
     } catch (err) {
       console.log(err);
-      res.status(400).send({ error: "Error creating new reminder" });
+      res.status(400).send({ error: "Error creating reminder" });
     }
   },
   async reminderUpdate(req, res) {
     try {
-      const { reminder } = req.body;
+      const rem = req.body;
       const user = await User.findById(req.userId);
 
       if (!user) return res.status(404).send({ error: "User not found" });
 
-      await Promise.all(
-        reminder.map(async (rem) => {
-          const reminder = await Reminder.findByIdAndUpdate(
-            req.params.reminderId,
-            {
-              rem,
-            }
-          );
-          user.reminder.push(reminder);
-        })
+      const id = req.params.reminderId;
+      const reminder = await Reminder.findById(id);
+      if (!reminder)
+        return res.status(404).send({ error: "Reminder not found" });
+
+      const reminderUpdate = await Reminder.findByIdAndUpdate(
+        id,
+        {
+          rem,
+        },
+        { new: true }
       );
-      await user.save();
-      return res.status(200).send({ user });
+
+      return res.status(200).send({ reminderUpdate });
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Update reminder failed" });
@@ -261,12 +273,17 @@ module.exports = {
       const user = await User.findById(req.userId);
       if (!user) return res.status(404).send({ error: "User not found" });
 
-      await Reminder.findByIdAndRemove(req.params.reminderId);
+      const id = req.params.reminderId;
+      const reminder = await Reminder.findById(id);
+      if (!reminder)
+        return res.status(404).send({ error: "Reminder not found" });
 
-      const empty = [];
-      user.reminder.push(empty);
-      await user.save();
-      return res.status(200).send({ user });
+      await Reminder.findByIdAndRemove(id);
+
+      user.reminder = user.reminder.map((element) => {
+        if (element == id) element = null;
+      });
+      return res.status(200).send();
     } catch (err) {
       console.log(err);
       res.status(400).send({ error: "Delete reminder failed" });
@@ -344,7 +361,7 @@ module.exports = {
   },
   async updateImg(req, res) {
     if (!req.file) {
-      return res.status(400).json({ message: "The file is invalid." });
+      return res.status(400).send({ error: "The file is invalid" });
     } else {
       try {
         const user = await User.findById(req.userId);
@@ -356,27 +373,29 @@ module.exports = {
 
         await Promise.all([imageUrl, deleteUrl]);
 
-        await User.findByIdAndUpdate(
+        const updated = await User.findByIdAndUpdate(
           req.userId,
           {
-            image: imageUrl,
+            $set: {
+              image: imageUrl,
+            },
           },
           { new: true }
         );
-        return res.status(200).json({ user });
+        return res.status(200).send(updated);
       } catch (err) {
-        return res.status(500).json({ error: err });
+        console.log(err);
+        return res.status(400).send({ error: "Can't update image" });
       }
     }
   },
   async chairs(req, res) {
     try {
       const schedule = await Schedule.find({}, "chair").select("-_id").exec();
-      console.log(schedule);
       return res.status(200).send({ schedule });
     } catch (err) {
       console.log(err);
-      res.status(500).send({ error: "Internal error" });
+      res.status(400).send({ error: "Getting chairs failed" });
     }
   },
 };
