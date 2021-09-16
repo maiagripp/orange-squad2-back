@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "BackEnd do Hackaton do Grupo FCamara.",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
     "dev": "NODE_ENV=development nodemon src/server.js"
   },
@@ -11,8 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/maiagripp/orange-squad2-back.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Squad2-dev",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/maiagripp/orange-squad2-back/issues"
   },
