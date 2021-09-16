@@ -11,7 +11,7 @@ const bucket = gc.bucket("orange_fc");
 
 async function deleteFile(fileUrl) {
   try {
-    const filename = fileUrl.slice(48);
+    const filename = fileUrl.slice(41);
     await bucket.file(filename).delete();
   } catch (err) {
     console.error(err);
