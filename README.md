@@ -16,5 +16,5 @@ BackEnd do Hackaton do Grupo FCamara.
 - [x] Controller para as imagens
 - [x] Adicionar ao model de usuario campo de imagen
 - [x] Finalizar todos os controllers
-- [ ] Testes finais das rotas
-- [ ] Fazer o postman collection
+- [x] Testes finais das rotas
+- [x] Fazer o postman collection
