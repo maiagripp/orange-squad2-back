@@ -30,15 +30,15 @@ router
   .get("/user/:userId", user)
   .patch("/user_update/:userId", imgMiddleware.none(), authMiddleware, userUpdate)
   .delete("/user_delete/:userId", authMiddleware, userDelete)
-  .post("/scheduling", imgMiddleware.none(), authMiddleware, scheduling)
-  .patch("/scheduling_update/:schedulingId", imgMiddleware.none(), authMiddleware, schedulingUpdate)
+  .post("/scheduling", authMiddleware, scheduling)
+  .patch("/scheduling_update/:schedulingId", authMiddleware, schedulingUpdate)
   .delete("/scheduling_delete/:schedulingId", authMiddleware, schedulingDelete)
-  .post("/reminder", imgMiddleware.none(), authMiddleware, reminder)
-  .patch("/reminder_update/:reminderId", imgMiddleware.none(), authMiddleware, reminderUpdate)
+  .post("/reminder", authMiddleware, reminder)
+  .patch("/reminder_update/:reminderId", authMiddleware, reminderUpdate)
   .delete("/reminder_delete/:reminderId", authMiddleware, reminderDelete)
   .post("/forgot_password", imgMiddleware.none(), passRecovery)
   .post("/reset_password", imgMiddleware.none(), passReset)
-  .post("/updateImage", authMiddleware, imgMiddleware.single("userImage"), updateImg)
+  .post("/update_image", authMiddleware, imgMiddleware.single("userImage"), updateImg)
   .get("/chairs", authMiddleware, chairs);
 
 module.exports = router;
