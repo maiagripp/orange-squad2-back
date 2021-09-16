@@ -22,14 +22,17 @@ function generateToken(params = {}) {
 module.exports = {
   async register(req, res) {
     try {
-      const { name, squad, email, phone, adress, password, file } = req.body;
+      const { name, squad, email, phone, address, password } = req.body;
 
       if (await User.findOne({ email }))
         return res.status(400).send({ error: "User already exists" });
 
+      if (!req.file)
+        return res.status(400).send({ error: "There is no image" });
+
       const hash = await passwordEncrypt(password);
 
-      const imageUrl = await uploadImage(file);
+      const imageUrl = await uploadImage(req.file);
 
       await Promise.all([hash, imageUrl]);
 
@@ -38,7 +41,7 @@ module.exports = {
         squad: squad,
         email: email,
         phone: phone,
-        adress: adress,
+        address: address,
         password: hash,
         image: imageUrl,
       });
@@ -82,7 +85,7 @@ module.exports = {
       return res.status(200).send({ users });
     } catch (err) {
       console.log(err);
-      res.status(500).send({ error: "Internal error" });
+      res.status(400).send({ error: "No users found" });
     }
   },
   async user(req, res) {
@@ -94,24 +97,28 @@ module.exports = {
       return res.status(200).send({ user });
     } catch (err) {
       console.log(err);
-      res.status(500).send({ error: "Internal error" });
+      res.status(400).send({ error: "User not found" });
     }
   },
   async userUpdate(req, res) {
     try {
-      const { name, squad, email, phone, adress } = req.body;
-      id = req.params.userId;
-      if (!(await User.findOne(id)))
+      const { name, squad, email, phone, address } = req.body;
+
+      const id = req.params.userId;
+
+      if (!(await User.findById(id)))
         return res.status(400).send({ error: "User not found" });
 
       const user = await User.findByIdAndUpdate(
         id,
         {
-          name: name,
-          squad: squad,
-          email: email,
-          phone: phone,
-          adress: adress,
+          $set: {
+            name: name,
+            squad: squad,
+            email: email,
+            phone: phone,
+            address: address,
+          },
         },
         { new: true }
       );
@@ -134,7 +141,7 @@ module.exports = {
       return res.status(200).send();
     } catch (err) {
       console.log(err);
-      res.status(500).send({ error: "Internal error" });
+      res.status(400).send({ error: "Delete failed" });
     }
   },
   async scheduling(req, res) {
